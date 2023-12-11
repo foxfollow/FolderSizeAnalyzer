@@ -1,5 +1,5 @@
 import os
-import pandas as pd
+# import pandas as pd
 from openpyxl import Workbook
 from datetime import datetime
 import sys
@@ -38,8 +38,9 @@ def scan_folders(folder_path):
 
     for i, folder in enumerate(all_folders):
         # Skip folders...
-        # if "Windows" in folder or "OneDrive" in folder or "OneDrive - SCPC of 3SCIP" in folder:
-        #     continue
+        folder_names = folder.split(os.sep)
+        if any(skip_folder in folder_names for skip_folder in folders_to_skip):
+            continue
 
         try:
             folder_size = get_folder_size(folder)
@@ -62,12 +63,12 @@ def scan_folders(folder_path):
     return folder_sizes
 
 
-def create_excel(folder_sizes):
-    df = pd.DataFrame(folder_sizes, columns=['Folder Path', 'Size', 'Unit'])
-    now = datetime.now()
-    date_time = now.strftime("%m-%d-%H-%M")
-    excel_path = os.path.join(folder_path, f'outp{date_time}.xlsx')
-    df.to_excel(excel_path, index=False)
+# def create_excel(folder_sizes):
+#     df = pd.DataFrame(folder_sizes, columns=['Folder Path', 'Size', 'Unit'])
+#     now = datetime.now()
+#     date_time = now.strftime("%m-%d-%H-%M")
+#     excel_path = os.path.join(folder_path, f'outp{date_time}.xlsx')
+#     df.to_excel(excel_path, index=False)
 
 
 def create_excel_xl(folder_sizes):
@@ -93,8 +94,17 @@ def create_error_log(error_name):
     with open(log_path, 'a') as f:
         f.write(f"{date_time2}: {error_name}\n")
 
-
+# MAIN
+# Get folder path from command line arguments or user input
 folder_path = sys.argv[1] if len(sys.argv) > 1 else input("Enter the folder path: ")
+
+# Collect all command line arguments after the first one into a list
+if len(sys.argv) > 2:
+    folders_to_skip = sys.argv[2:]
+else:
+    user_input = input("Enter the folders to skip separated by commas, or press Enter to skip none: ")
+    folders_to_skip = [folder.strip() for folder in user_input.split(",")] if user_input else []
+
 print("Scanning folders...")
 try:
     folder_sizes = scan_folders(folder_path)
@@ -105,7 +115,3 @@ except Exception as e:
     create_error_log(str(e))
     print("An error occurred. Please check the error log.")
     input("Press Enter to exit...")
-
-input("Press Enter to exit...")
-
-
